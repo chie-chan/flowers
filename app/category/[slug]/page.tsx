@@ -1,8 +1,18 @@
 import Link from "next/link"
-import { getCategories } from "@/lib/wordpress"
+import { ArrowLeft } from "lucide-react"
+import { getPostsByCategory, getCategories } from "@/lib/wordpress"
+import { Button } from "@/components/ui/button"
 
-export default async function CategoryListPage() {
+interface CategoryPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default async function CategoryPage({ params }: CategoryPageProps) {
+  const posts = await getPostsByCategory(params.slug);
   const categories = await getCategories();
+  const currentCategory = categories.find(cat => cat.slug === params.slug);
 
   return (
     <div className="min-h-screen bg-[#FFF9F9]">
@@ -37,22 +47,36 @@ export default async function CategoryListPage() {
 
       {/* メインコンテンツ */}
       <main className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-pink-700">カテゴリー一覧</h1>
+        <div className="mb-8">
+          <Link href="/category" className="inline-flex items-center text-pink-500 hover:text-pink-600">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            カテゴリー一覧に戻る
+          </Link>
+        </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-sm transition-all hover:shadow-md"
-            >
-              <h2 className="mb-2 text-xl font-semibold text-pink-700 group-hover:text-pink-600">
-                {category.name}
-              </h2>
-              {category.description && (
-                <p className="text-gray-600">{category.description}</p>
+        <h1 className="mb-8 text-3xl font-bold text-pink-700">
+          {currentCategory?.name || "カテゴリー"}
+        </h1>
+
+        {currentCategory?.description && (
+          <p className="mb-8 text-gray-600">{currentCategory.description}</p>
+        )}
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {posts.map((post) => (
+            <article key={post.id} className="overflow-hidden rounded-lg bg-white shadow-sm">
+              {post.featuredImage?.node?.sourceUrl && (
+                <img
+                  src={post.featuredImage.node.sourceUrl}
+                  alt={post.title}
+                  className="h-48 w-full object-cover"
+                />
               )}
-            </Link>
+              <div className="p-6">
+                <h2 className="mb-2 text-xl font-semibold text-pink-700">{post.title}</h2>
+                <div className="prose prose-sm text-gray-600" dangerouslySetInnerHTML={{ __html: post.content }} />
+              </div>
+            </article>
           ))}
         </div>
       </main>
@@ -112,5 +136,4 @@ export default async function CategoryListPage() {
       </footer>
     </div>
   );
-}
-
+} 

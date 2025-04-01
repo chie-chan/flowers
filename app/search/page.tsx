@@ -1,7 +1,9 @@
 import Link from "next/link"
+import { Search } from "lucide-react"
 import { getCategories } from "@/lib/wordpress"
+import SearchForm from "@/app/components/SearchForm"
 
-export default async function CategoryListPage() {
+export default async function SearchPage() {
   const categories = await getCategories();
 
   return (
@@ -37,23 +39,9 @@ export default async function CategoryListPage() {
 
       {/* メインコンテンツ */}
       <main className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-pink-700">カテゴリー一覧</h1>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-sm transition-all hover:shadow-md"
-            >
-              <h2 className="mb-2 text-xl font-semibold text-pink-700 group-hover:text-pink-600">
-                {category.name}
-              </h2>
-              {category.description && (
-                <p className="text-gray-600">{category.description}</p>
-              )}
-            </Link>
-          ))}
+        <div className="mx-auto max-w-3xl">
+          <h1 className="mb-8 text-3xl font-bold text-pink-700">記事を検索</h1>
+          <SearchForm />
         </div>
       </main>
 
@@ -112,5 +100,4 @@ export default async function CategoryListPage() {
       </footer>
     </div>
   );
-}
-
+} 

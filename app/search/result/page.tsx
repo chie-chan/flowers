@@ -1,8 +1,17 @@
 import Link from "next/link"
-import { getCategories } from "@/lib/wordpress"
+import { getCategories, searchPosts } from "@/lib/wordpress"
+import SearchForm from "@/app/components/SearchForm"
 
-export default async function CategoryListPage() {
+interface SearchResultPageProps {
+  searchParams: {
+    q: string;
+  };
+}
+
+export default async function SearchResultPage({ searchParams }: SearchResultPageProps) {
+  const query = searchParams.q || "";
   const categories = await getCategories();
+  const posts = await searchPosts(query);
 
   return (
     <div className="min-h-screen bg-[#FFF9F9]">
@@ -37,23 +46,57 @@ export default async function CategoryListPage() {
 
       {/* メインコンテンツ */}
       <main className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-pink-700">カテゴリー一覧</h1>
+        <div className="mx-auto max-w-3xl">
+          <h1 className="mb-8 text-3xl font-bold text-pink-700">
+            「{query}」の検索結果
+          </h1>
+          <div className="mb-8">
+            <SearchForm />
+          </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-sm transition-all hover:shadow-md"
-            >
-              <h2 className="mb-2 text-xl font-semibold text-pink-700 group-hover:text-pink-600">
-                {category.name}
-              </h2>
-              {category.description && (
-                <p className="text-gray-600">{category.description}</p>
-              )}
-            </Link>
-          ))}
+          {posts.length > 0 ? (
+            <div className="space-y-8">
+              {posts.map((post) => (
+                <article
+                  key={post.id}
+                  className="overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <Link href={`/post/${post.slug}`}>
+                    {post.featuredImage?.node?.sourceUrl && (
+                      <div className="aspect-video overflow-hidden">
+                        <img
+                          src={post.featuredImage.node.sourceUrl}
+                          alt={post.title}
+                          className="h-full w-full object-cover transition-transform hover:scale-105"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <h2 className="mb-2 text-xl font-bold text-gray-800 hover:text-pink-600">
+                        {post.title}
+                      </h2>
+                      {post.categories?.nodes && post.categories.nodes.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {post.categories.nodes.map((category) => (
+                            <span
+                              key={category.id}
+                              className="rounded-full bg-pink-100 px-3 py-1 text-sm text-pink-700"
+                            >
+                              {category.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">
+              検索結果が見つかりませんでした。別のキーワードをお試しください。
+            </p>
+          )}
         </div>
       </main>
 
@@ -112,5 +155,4 @@ export default async function CategoryListPage() {
       </footer>
     </div>
   );
-}
-
+} 

@@ -1,8 +1,17 @@
 import Link from "next/link"
-import { getCategories } from "@/lib/wordpress"
+import { getCategories, getPopularPosts } from "@/lib/wordpress"
+import Pagination from "@/app/components/Pagination"
 
-export default async function CategoryListPage() {
+interface PopularPageProps {
+  searchParams: {
+    after?: string;
+    before?: string;
+  };
+}
+
+export default async function PopularPage({ searchParams }: PopularPageProps) {
   const categories = await getCategories();
+  const posts = await getPopularPosts();
 
   return (
     <div className="min-h-screen bg-[#FFF9F9]">
@@ -15,19 +24,19 @@ export default async function CategoryListPage() {
           </div>
           <div className="hidden md:flex">
             <nav className="flex space-x-6">
-              <Link href="/" className="text-pink-700 hover:text-pink-500">
+              <Link href="/" className="text-gray-600 hover:text-pink-500">
                 ホーム
               </Link>
               <Link href="/category" className="text-gray-600 hover:text-pink-500">
                 カテゴリー
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-pink-500">
+              <Link href="/popular" className="text-pink-700 hover:text-pink-500">
                 人気記事
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-pink-500">
+              <Link href="/recent" className="text-gray-600 hover:text-pink-500">
                 新着記事
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-pink-500">
+              <Link href="/contact" className="text-gray-600 hover:text-pink-500">
                 お問い合わせ
               </Link>
             </nav>
@@ -37,22 +46,34 @@ export default async function CategoryListPage() {
 
       {/* メインコンテンツ */}
       <main className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-pink-700">カテゴリー一覧</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-pink-700">人気記事</h1>
+          <p className="mt-2 text-gray-600">みなさんに読まれている人気の記事です</p>
+        </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-sm transition-all hover:shadow-md"
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {posts.map((post) => (
+            <article
+              key={post.id}
+              className="group relative overflow-hidden rounded-lg shadow-sm transition-all hover:shadow-md"
             >
-              <h2 className="mb-2 text-xl font-semibold text-pink-700 group-hover:text-pink-600">
-                {category.name}
-              </h2>
-              {category.description && (
-                <p className="text-gray-600">{category.description}</p>
-              )}
-            </Link>
+              <Link href={`/post/${post.slug}`}>
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={post.featuredImage?.node?.sourceUrl || "/placeholder.svg"}
+                    alt={post.title}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-pink-800/70 via-pink-500/30 to-transparent opacity-90"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="mb-1 flex items-center gap-1">
+                    <span className="text-xs text-white">{post.commentCount}コメント</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-white">{post.title}</h3>
+                </div>
+              </Link>
+            </article>
           ))}
         </div>
       </main>
@@ -86,17 +107,17 @@ export default async function CategoryListPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-pink-500">
+                  <Link href="/popular" className="hover:text-pink-500">
                     人気記事
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-pink-500">
+                  <Link href="/recent" className="hover:text-pink-500">
                     新着記事
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-pink-500">
+                  <Link href="/contact" className="hover:text-pink-500">
                     お問い合わせ
                   </Link>
                 </li>
@@ -112,5 +133,4 @@ export default async function CategoryListPage() {
       </footer>
     </div>
   );
-}
-
+} 

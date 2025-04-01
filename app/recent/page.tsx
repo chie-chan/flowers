@@ -1,8 +1,10 @@
 import Link from "next/link"
-import { getCategories } from "@/lib/wordpress"
+import { ArrowRight } from "lucide-react"
+import { getCategories, getRecentPosts } from "@/lib/wordpress"
 
-export default async function CategoryListPage() {
+export default async function RecentPage() {
   const categories = await getCategories();
+  const posts = await getRecentPosts();
 
   return (
     <div className="min-h-screen bg-[#FFF9F9]">
@@ -15,19 +17,19 @@ export default async function CategoryListPage() {
           </div>
           <div className="hidden md:flex">
             <nav className="flex space-x-6">
-              <Link href="/" className="text-pink-700 hover:text-pink-500">
+              <Link href="/" className="text-gray-600 hover:text-pink-500">
                 ホーム
               </Link>
               <Link href="/category" className="text-gray-600 hover:text-pink-500">
                 カテゴリー
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-pink-500">
+              <Link href="/popular" className="text-gray-600 hover:text-pink-500">
                 人気記事
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-pink-500">
+              <Link href="/recent" className="text-pink-700 hover:text-pink-500">
                 新着記事
               </Link>
-              <Link href="#" className="text-gray-600 hover:text-pink-500">
+              <Link href="/contact" className="text-gray-600 hover:text-pink-500">
                 お問い合わせ
               </Link>
             </nav>
@@ -37,22 +39,48 @@ export default async function CategoryListPage() {
 
       {/* メインコンテンツ */}
       <main className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold text-pink-700">カテゴリー一覧</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-pink-700">新着記事</h1>
+          <p className="mt-2 text-gray-600">最新のハンドメイドアイデアをチェック</p>
+        </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-sm transition-all hover:shadow-md"
+        <div className="grid gap-6 md:grid-cols-3">
+          {posts.map((post) => (
+            <article
+              key={post.id}
+              className="overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
             >
-              <h2 className="mb-2 text-xl font-semibold text-pink-700 group-hover:text-pink-600">
-                {category.name}
-              </h2>
-              {category.description && (
-                <p className="text-gray-600">{category.description}</p>
-              )}
-            </Link>
+              <Link href={`/post/${post.slug}`}>
+                <div className="aspect-video overflow-hidden">
+                  <img
+                    src={post.featuredImage?.node?.sourceUrl || "/placeholder.svg"}
+                    alt={post.title}
+                    className="h-full w-full object-cover transition-transform hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    {post.categories?.nodes && post.categories.nodes.length > 0 && (
+                      <span className="rounded-full bg-pink-100 px-2 py-1 text-xs text-pink-700">
+                        {post.categories.nodes[0].name}
+                      </span>
+                    )}
+                    {post.date && (
+                      <span className="text-xs text-gray-500">
+                        {new Date(post.date).toLocaleDateString('ja-JP')}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mb-2 text-xl font-bold text-gray-800">{post.title}</h3>
+                  <p className="mb-4 line-clamp-2 text-gray-600">
+                    {post.content.replace(/<[^>]*>/g, '')}
+                  </p>
+                  <div className="inline-flex items-center text-sm font-medium text-pink-500 hover:text-pink-600">
+                    続きを読む <ArrowRight className="ml-1 h-4 w-4" />
+                  </div>
+                </div>
+              </Link>
+            </article>
           ))}
         </div>
       </main>
@@ -86,17 +114,17 @@ export default async function CategoryListPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-pink-500">
+                  <Link href="/popular" className="hover:text-pink-500">
                     人気記事
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-pink-500">
+                  <Link href="/recent" className="hover:text-pink-500">
                     新着記事
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-pink-500">
+                  <Link href="/contact" className="hover:text-pink-500">
                     お問い合わせ
                   </Link>
                 </li>
@@ -112,5 +140,4 @@ export default async function CategoryListPage() {
       </footer>
     </div>
   );
-}
-
+} 

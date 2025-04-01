@@ -1,10 +1,22 @@
 import Link from "next/link"
 import { ArrowRight, Heart, Search } from "lucide-react"
+import { getPosts, getCategories, getPaginatedPosts } from "@/lib/wordpress"
+import Pagination from "@/app/components/Pagination"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-export default function HomePage() {
+interface HomePageProps {
+  searchParams: {
+    after?: string;
+    before?: string;
+  };
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const categories = await getCategories();
+  const { posts, pageInfo } = await getPaginatedPosts(10, searchParams.after);
+
   return (
     <div className="min-h-screen bg-[#FFF9F9]">
       {/* ヘッダー */}
@@ -84,6 +96,62 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 最新記事セクション */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="mb-8 text-center">
+            <h2 className="mb-2 text-3xl font-bold text-pink-700">最新記事</h2>
+            <p className="text-gray-600">最近投稿された記事をご紹介します</p>
+          </div>
+          <div className="space-y-8">
+            {posts.map((post) => (
+              <article
+                key={post.id}
+                className="overflow-hidden rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"
+              >
+                <Link href={`/post/${post.slug}`}>
+                  {post.featuredImage?.node?.sourceUrl && (
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={post.featuredImage.node.sourceUrl}
+                        alt={post.title}
+                        className="h-full w-full object-cover transition-transform hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <h2 className="mb-2 text-xl font-bold text-gray-800 hover:text-pink-600">
+                      {post.title}
+                    </h2>
+                    {post.categories?.nodes && post.categories.nodes.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {post.categories.nodes.map((category) => (
+                          <span
+                            key={category.id}
+                            className="rounded-full bg-pink-100 px-3 py-1 text-sm text-pink-700"
+                          >
+                            {category.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              </article>
+            ))}
+          </div>
+
+          {/* ページネーション */}
+          <Pagination
+            hasNextPage={pageInfo.hasNextPage}
+            hasPreviousPage={pageInfo.hasPreviousPage}
+            startCursor={pageInfo.startCursor}
+            endCursor={pageInfo.endCursor}
+            currentPath="/"
+          />
+        </div>
+      </section>
+
       {/* カテゴリーセクション */}
       <section className="py-12">
         <div className="container mx-auto px-4">
@@ -92,28 +160,20 @@ export default function HomePage() {
             <p className="text-gray-600">お好みのカテゴリーから記事を探してみましょう</p>
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              { name: "ドライフラワー", image: "/placeholder.svg?height=200&width=200" },
-              { name: "プリザーブドフラワー", image: "/placeholder.svg?height=200&width=200" },
-              { name: "フラワーアレンジメント", image: "/placeholder.svg?height=200&width=200" },
-              { name: "リース作り", image: "/placeholder.svg?height=200&width=200" },
-            ].map((category, index) => (
+            {categories.map((category) => (
               <Link
-                href="#"
-                key={index}
-                className="group relative overflow-hidden rounded-lg transition-all hover:shadow-md"
+                key={category.id}
+                href={`/category/${category.slug}`}
+                className="group relative overflow-hidden rounded-lg bg-white p-4 shadow-sm transition-all hover:shadow-md"
               >
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={category.image || "/placeholder.svg"}
-                    alt={category.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-pink-500/80 to-transparent opacity-80"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-center text-lg font-medium text-white">{category.name}</h3>
-                </div>
+                <img
+                  src={category.image || "/placeholder.svg"}
+                  alt={category.name}
+                  className="mb-2 h-32 w-full rounded object-cover"
+                />
+                <h3 className="text-center font-semibold text-pink-700 group-hover:text-pink-600">
+                  {category.name}
+                </h3>
               </Link>
             ))}
           </div>
@@ -265,26 +325,13 @@ export default function HomePage() {
             <div>
               <h3 className="mb-4 text-lg font-bold text-pink-700">カテゴリー</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>
-                  <Link href="#" className="hover:text-pink-500">
-                    ドライフラワー
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-pink-500">
-                    プリザーブドフラワー
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-pink-500">
-                    フラワーアレンジメント
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-pink-500">
-                    リース作り
-                  </Link>
-                </li>
+                {categories.map((category) => (
+                  <li key={category.id}>
+                    <Link href={`/category/${category.slug}`} className="hover:text-pink-500">
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
             <div>
