@@ -318,8 +318,17 @@ export async function getPosts(): Promise<Post[]> {
 
 export async function getCategories(): Promise<Category[]> {
   const endpoint = `${process.env.NEXT_PUBLIC_WP_API_URL}/graphql`;
-  const data = await request<CategoriesResponse>(endpoint, categoriesQuery);
-  return data.categories.nodes;
+  if (!process.env.NEXT_PUBLIC_WP_API_URL) {
+    console.error('NEXT_PUBLIC_WP_API_URL is not defined');
+    return [];
+  }
+  try {
+    const data = await request<CategoriesResponse>(endpoint, categoriesQuery);
+    return data.categories.nodes;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
 }
 
 export async function getPostsByCategory(slug: string): Promise<Post[]> {
